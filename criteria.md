@@ -28,7 +28,7 @@ tool calls and returns a fit card — in at least 4 of 5 tries.
 <!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
      "my search is a plain keyword match and some phrasings will miss" is a
      real answer. -->
-
+search_listings() scores by keyword overlap against description which means a phrasing that doesn't share literal tokens with any listing's title/description/style_tags can score zero even when a human would call it a match. Because of this search-coverage gap, demanding 5/5 would be penalizing the tool for something outside the loop's control. 4/5 accepts that one phrasing in five might miss on vocabulary alone, while still catching real regressions.
 ---
 
 ## 2. An impossible query stops before the second tool
@@ -39,7 +39,7 @@ Given a query that matches no listings, the agent stops before calling
 **Why this target:**
 <!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
      about this path? -->
-
+There's no scoring ambiguity in this criterion: an empty-result query means search_listings returned [] and not None or an exception. The loop either checks if not results: stop or it doesn't. Since this path has no model-call or scoring variance in it, any failure is a real loop bug, so a target of 5/5 is reasonable.
 ---
 
 ## 3. Something about state
@@ -54,11 +54,11 @@ Given a query that matches no listings, the agent stops before calling
      compares session["selected_item"] against what actually reached
      suggest_outfit is the shape you're after. -->
 
-
+Given a query that matches a listing, the listing_id stored in session["selected_item"] after search is the same as the listing_id received by suggest_outfit — 5 of 5 tries.
 
 **Why this target:**
 
-
+If the matched listing output from search_listings() and the input to suggest_outfit do not have the same unique listing ID, that's a state problem. It should be a binary check for a simple handoff so 5 of 5 tries is fair.
 
 ---
 
@@ -75,11 +75,11 @@ Given a query that matches no listings, the agent stops before calling
      sentence? A card longer than a caption anyone would post? Any of those can
      be turned into a number. -->
 
-
+Every fit card mentions the item's price and platform it's paired with — 5 of 5 times.
 
 **Why this target:**
 
-
+This is the one thing I'd actually be unhappy to see missing. It's a basic necessity in the output string of create_fit_card regardless of model variance and should always pass so 5 out of 5 is fair.
 
 ---
 
@@ -92,12 +92,12 @@ Given a query that matches no listings, the agent stops before calling
      search respects a price ceiling — anything, as long as it names a number
      or an observable outcome. -->
 
-
+Given a session that has no wardrobe items, the agent calls
+`suggest_outfit` and returns a non-empty message, not an exception, not "" — 5 of 5 tries.
 
 **Why this target:**
 
-
-
+Simliar to criterion 2, there's no scoring ambiguity in this criterion: an non-empty message means suggest_outfit returned something and not an empty message or an exception. Since this is a deterministic branch with empty wardrobe as a checkable precondition, a target of 5/5 is reasonable and it gives me something to deliberately break and verify. 
 ---
 
 <!-- ─────────────────────────────────────────────────────────────────────────
