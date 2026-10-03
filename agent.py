@@ -13,10 +13,27 @@ Build and test your three tools in `tools.py` first. Then come here.
     python agent.py          runs both example paths below
 """
 
+import json
+
 import config
 import trace
+from generate import generate, ModelUnavailable
 from tools import search_listings, suggest_outfit, create_fit_card
-from generate import ModelUnavailable
+
+
+_PARSE_SYSTEM = (
+    "Extract a thrift-shopping search from the user's query. Respond with "
+    "ONLY a JSON object, no markdown fences, no extra text, in exactly this "
+    'shape: {"description": "<keywords>", "size": <string or null>, '
+    '"max_price": <number or null>}. "description" is required; "size" and '
+    '"max_price" are null when the query doesn\'t mention them.'
+)
+
+
+def _parse_query(query: str) -> dict:
+    """Ask the model to pull description/size/max_price out of free text."""
+    response = generate(query, system=_PARSE_SYSTEM)
+    return json.loads(response)
 
 
 # ── session state ─────────────────────────────────────────────────────────────
@@ -106,9 +123,42 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         than a stack trace. The import is already at the top of this file.
     """
     session = new_session(query, wardrobe)
+    trace.check_iterations(1)
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    session["parsed"] = _parse_query(session["query"])
+
+    session["search_results"] = search_listings(
+        description=session["parsed"]["description"],
+        size=session["parsed"]["size"],
+        max_price=session["parsed"]["max_price"],
+    )
+
+    if not session["search_results"]:
+        parsed = session["parsed"]
+        clauses = []
+        if parsed.get("size"):
+            clauses.append(f"size {parsed['size']}")
+        if parsed.get("max_price") is not None:
+            clauses.append(f"under ${parsed['max_price']}")
+        constraints = f" ({', '.join(clauses)})" if clauses else ""
+        session["error"] = (
+            f"No listings matched '{parsed['description']}'{constraints}. "
+            "Try broader keywords, a different size, or a higher price ceiling."
+        )
+        return session
+
+    session["selected_item"] = session["search_results"][0]
+
+    session["outfit_suggestion"] = suggest_outfit(
+        new_item=session["selected_item"],
+        wardrobe=session["wardrobe"],
+    )
+
+    session["fit_card"] = create_fit_card(
+        outfit=session["outfit_suggestion"],
+        new_item=session["selected_item"],
+    )
+
     return session
 
 
