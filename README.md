@@ -40,7 +40,7 @@
 ## What This Does
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
-
+FitFindr is an app where the user describes a piece of clothing they want to thrift. The app will find a listing that matches that item, suggest an outfit to pair it with, and then write a short social media caption about it in the form of a "fit card". If there is no match, the app will recommend some changes to the query. 
 
 
 ---
@@ -113,8 +113,14 @@
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30, size M'
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
 
+  Outfit:   Pair the butterfly baby tee with your baggy dark-wash straight-leg jeans and chunky white sneakers for an effortless Y2K streetwear look; throw on the slightly cropped vintage black denim jacket over top and sling the black crossbody bag across for an easy day out. Alternatively, lean into a softer, retro-contrast vibe by tucking the tee into your wide-leg khaki trousers, accented with the brown leather belt and finished with those same chunky white sneakers.
+
+  Fit card: Channeling peak Y2K mall culture with this adorable butterfly baby tee. It's giving effortless early 2000s streetwear when paired with baggy dark wash denim. Grab it on depop for $18.00 before I change my mind and keep it.
+
+1 model calls this session, 2 served from cache, 96 prompt + 23 output tokens
 ```
 
 **The three tools, tested one at a time**
@@ -147,15 +153,15 @@ Nothing beats a genuinely broken-in pair of 501s with that exact fade at the kne
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Claude to attack my criterion to make sure they were well written for effective checking.
+- *What came back:* It suggested that I be more specific, to cover other potential cases.
+- *What I changed:* I changed it to include what to return specifically 'returns a non-empty message, not an exception, not ""'.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I want to discuss the "why" reasoning for criterion 1, because I believed that my query would be parsed by asking the model.
+- *What came back:* The AI reasoning explained that search_listings does not call the model, it searches scores by keyword overlap against description. It explained a fair argument for the 4/5 target based on keyword-overlap vocabulary gaps.
+- *What I changed:* I understood this better that the search_listings tool is using keyword overlap and the model will actually be used in the query parsing mentioned in the branch rule. I was better able to write a why for criterion 1.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
