@@ -245,21 +245,52 @@ that produced it:
 **Happy path**
 
 ```
+$ python app.py ask 'vintage graphic tee under $30, size M' --trace
+[1] _parse_query
+      in:  vintage graphic tee under $30, size M
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 8 items: Y2K Baby Tee — Butterfly Print, Mesh Long-Sleeve Top — Black, 90s Silk Slip Dress — Floral, Midi Length … +5 more
+[3] suggest_outfit
+      in:  dict with keys: new_item, wardrobe
+      out: Pair the butterfly baby tee with your baggy dark-wash straight-leg jeans and chunky white sneakers for a class…
+[4] create_fit_card
+      in:  dict with keys: outfit, new_item
+      out: Channeling peak 2000s mall vibes with this butterfly print baby tee. Just listed this cropped cutie on depop f…
 
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Pair the butterfly baby tee with your baggy dark-wash straight-leg jeans and chunky white sneakers for a classic Y2K streetwear look, then throw on the vintage black denim jacket for an easy, slightly edgy contrast. For an alternate vibe that leans into early 2000s mall-goth, wear the baby tee with the same dark-wash jeans and black combat boots, layering the black cropped zip hoodie unzipped over top to let the pink and purple butterfly graphic peek through.
+
+  Fit card: Channeling peak 2000s mall vibes with this butterfly print baby tee. Just listed this cropped cutie on depop for $18.00 before it's gone. Pair it with baggy dark-wash denim and chunky sneakers for the ultimate nostalgic fit.
+
+3 model calls this session, 711 prompt + 180 output tokens
 ```
 
 **Empty search**
 
 ```
+$ python app.py ask 'industrial scuba diving helmet, size 4XL, under $2' --trace
+[1] _parse_query
+      in:  industrial scuba diving helmet, size 4XL, under $2
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[3] branch
+      →    search_results empty — stopping before suggest_outfit
 
+  No listings matched 'industrial scuba diving helmet' (size 4XL, under $2). Try broader keywords, a different size, or a higher price ceiling.
+
+0 model calls this session, 1 served from cache
 ```
 
-**On the MCP move:** <!-- what changed in your code, and whether anything
-behaved differently afterwards. If the rewire didn't work, say exactly where it
-broke — the error text and the last thing that worked. That earns the point in
-full. -->
-
-
+**On the MCP move:** 
+`search_listings` is now registered as an MCP tool in `mcp_server.py`. 
+In `agent.py::run_agent`, the direct `search_listings` call became `mcp_client.call_tool("search_listings", {...})` — with the same arguments, same return shape, just routed through the MCP client instead of a plain Python import. 
+The rewire worked without changing behavior: re-running the same full query
+("vintage graphic tee under $30, size M") returned the identical item, outfit, and fit card as before the move, and the empty-search and empty-wardrobe paths still behave the same way.
 
 ---
 
