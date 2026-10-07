@@ -183,17 +183,55 @@ Nothing beats a genuinely broken-in pair of 501s with that exact fade at the kne
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. selected_item reaches suggest_outfit unchanged | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card names price and platform | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Empty wardrobe gets non-empty advice | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Real output from one try**, pasted as text, naming the file and function
-that produced it:
+Full output for all five scenarios, five tries each: `results/run_2026-10-07_1624_before.md`.
+
+**Real output, one try per criterion**, pasted as text, naming the file and
+function that produced it:
+
+**Criterion 1** — `agent.py::run_agent` (try 1, "matching query completes", query `vintage graphic tee under $30`):
 
 ```
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
 
+Fit card:
+Living out my early 2000s pop star fantasy in this butterfly print baby tee. Just dropped this little pink and purple dream on depop for $18.00 before I change my mind and keep it. Trust me, you need this crop length for your next baggy denim fit.
+```
+
+**Criterion 2** — `agent.py::run_agent`, the branch on `tools.py::search_listings`'s empty-list return (try 1, "impossible query stops early", query `designer ballgown size XXS under $5`):
+
+```
+- stopped early: yes — No listings matched 'designer ballgown' (size XXS, under $5). Try broader keywords, a different size, or a higher price ceiling.
+- selected_item: (none)
+- search_results: 0
+```
+
+**Criterion 3** — `trace.py::step`, captured by `run_eval.py::run_once` (try 1, "state: selected_item reaches suggest_outfit", query `khaki cargo pants under $30`). The `selected_item` line and the `suggest_outfit` trace step show the same title, price, and platform:
+
+```
+- selected_item: Low-Rise Cargo Pants — Khaki ($27.0, poshmark)
+
+[3] suggest_outfit
+      in:  Low-Rise Cargo Pants — Khaki ($27.0, poshmark)
+      →    criterion 3: compare this item against selected_item above
+```
+
+**Criterion 4** — `tools.py::create_fit_card` (try 1, "fit card names price and platform", query `leather belt under $15`):
+
+```
+Obsessed with this leather belt I just scored on thredUp for only $12.00! It has the best vintage Western energy and is going to look so good half-tucked into some baggy jeans. Definitely my new favorite accessory for tying an effortless earth-tone fit together.
+```
+
+**Criterion 5** — `tools.py::suggest_outfit`, the empty-wardrobe branch (try 1, "empty wardrobe", query `denim jacket under $50`):
+
+```
+Lean into the jacket's structured 80s proportions by pairing it with high-waisted, wide-leg olive green utility pants and a snug, ribbed black tank top, finished off with chunky black loafers for an effortless, downtown-cool vibe. Alternatively, create a playful contrast with feminine textures by layering the cropped denim over a black floral slip dress paired with beat-up white canvas sneakers and a canvas tote bag for an easy, coffee-run-ready look.
 ```
 
 ---
