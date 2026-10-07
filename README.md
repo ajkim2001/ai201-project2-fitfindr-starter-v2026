@@ -256,15 +256,17 @@ Lean into the jacket's structured 80s proportions by pairing it with high-waiste
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes all three tools | 4 of 5 | MET | 5/5 tries had a non-None `fit_card`, `outfit_suggestion`, and `selected_item` — counted the passes in `results/run_2026-10-07_1624_before.md` and read 5 against the 4-of-5 target. |
+| 2 | Impossible query stops before the second tool | 5 of 5 | MET | 5/5 tries had `session["error"]` set and `fit_card` still `None`, with the trace stopping at step 3 (`branch`) before any `suggest_outfit` step appeared. |
+| 3 | selected_item reaches suggest_outfit unchanged | 5 of 5 | MET | 5/5 tries had the `selected_item` line and the `suggest_outfit` trace step's `in:` line showing the identical title/price/platform. |
+| 4 | Fit card names price and platform | 5 of 5 | MET | 5/5 fit cards for the leather belt scenario mentioned both `$12.00` and `thredUp` — read each of the five pasted cards by eye. |
+| 5 | Empty wardrobe gets non-empty advice | 5 of 5 | MET | 5/5 tries on the empty-wardrobe scenario returned a non-empty `outfit_suggestion` string, no crash, no empty string. |
 
 **Diagnoses**
 
+Nothing missed this run — all five criteria held at their stated target, not just on average.
 
+Honestly, though, three of the five (2, 3, 5) are deterministic branch checks with no model call in the path being tested — once the branch logic is correct at all, it passes every time by construction, so running it five times doesn't add information beyond running it once. Of those, **criterion 3 is the one I'd tighten**. Criterion 2's risk is real (a genuine `if` bug would show up), and criterion 5 at least depends on `suggest_outfit`'s empty-wardrobe branch doing something. But criterion 3's scenario ran the *same* item through the *same* query five times — it can't catch an item-specific bug (e.g., a listing missing a field that breaks the handoff) because it never varies the item. A tighter version would run the state check across 5 different matching queries/items instead of one query five times, so the five tries are actually five different pieces of evidence rather than five repeats of the same one.
 
 ---
 
