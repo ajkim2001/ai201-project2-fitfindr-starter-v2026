@@ -151,7 +151,8 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     system = (
         "You are a thrift styling assistant. Suggest one or two complete "
         "outfits built around the item described. Be concrete about pieces, "
-        "colors, and vibe. Keep it to a short paragraph."
+        "colors, and vibe. Keep it to a short paragraph. Plain prose only — "
+        "no markdown, no asterisks, no bullet points."
     )
 
     item_desc = (

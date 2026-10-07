@@ -341,35 +341,58 @@ The rewire worked without changing behavior: re-running the same full query
 
      `python run_eval.py --label after` -->
 
-**What I changed:**
+**What I changed:** Added to `suggest_outfit`'s system prompt in `tools.py`: "Plain prose only — no markdown, no asterisks, no bullet points."
 
-**Which failure it was meant to fix:**
+**Which failure it was meant to fix:** In the before-run, one of `suggest_outfit`'s outputs leaked markdown bold formatting — `"...your fitted **white ribbed tank top**..."` (criterion 3, try 1). None of my five criteria technically failed because of it, but it's a real defect: that string gets displayed and fed into `create_fit_card`'s prompt as plain text, so literal asterisks would show up as garbage in a UI that doesn't render markdown.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. selected_item reaches suggest_outfit unchanged | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card names price and platform | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Empty wardrobe gets non-empty advice | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Did it help, and how do I know:**
+Full output: `results/run_2026-10-07_1644_after.md`.
 
-<!-- If it made things worse, say that. Honestly reported, that earns full
-     credit and is more interesting than one that worked. -->
+**Did it help, and how do I know:** Partially. It did exactly what it was
+scoped to do — across all 20 `suggest_outfit` calls in the after-run, zero outputs contained markdown, versus 1 in the before-run. The targeted tool is fixed.
 
+But it didn't fix the underlying category of problem: in the same after-run, try 2 of the "fit card names price and platform" scenario produced `"...the classic Western buckle adds the *exact* right amount of detail."` — markdown italics, this time from `create_fit_card`, which I never touched. None of my five criteria check for markdown, so this didn't move any PASS/FAIL cell — the run log looks identical to the before-run, all five still MET (5/5). 
 
+The honest read is that I fixed one tool's instance of a problem that two of my three model-calling tools share, because I diagnosed it narrowly (one leak in one tool's output) instead of broadly (neither model-calling tool's prompt rules out markdown). A more complete fix would add the same line to `create_fit_card`'s system prompt too.
 
 ---
 
 ## What's Still Broken
 
-<!-- For each criterion still missed: what you'd do, and why you stopped where
-     you did. "I ran out of time" is fine if it's true. Pretending nothing is
-     left is not. -->
+None of my five criteria are missed — both the before-run and the after-run
+hit 5/5 on all five. But two real things are still broken that my criteria
+don't catch.
 
+**`create_fit_card` can still leak markdown.** The improvement only added the
+"plain prose, no markdown" instruction to `suggest_outfit`'s system prompt.
+`create_fit_card`'s system prompt (`tools.py::create_fit_card`) has no such
+line, and the after-run caught it doing this —
+`"...the classic Western buckle adds the *exact* right amount of detail."`
+The fix is the same one-line prompt addition, applied to the other tool. I
+stopped here because I'd scoped this unit's improvement to one change, and I
+wanted the before/after comparison to isolate that one change rather than
+fix both tools and not know which one mattered. This is the next thing I'd
+do.
+
+**Criterion 3's scenario can't catch an item-specific bug.** I flagged this
+in Verdicts and Diagnoses: the "state" scenario runs the *same* query five
+times, so all five tries exercise the identical code path on the identical
+item. If the state handoff broke only for items missing a field — say, the
+many listings where `brand` is `None` — this scenario would never find out,
+because it never varies the item. I'd rewrite the scenario to cycle through
+5 different matching queries instead of repeating one, but doing that means
+either adding per-try query lists to `scenarios.py`'s shape or changing how
+`run_eval.py` iterates tries, and I didn't want to touch `run_eval.py` itself
+without checking that in first.
 
 
 <!-- ═════════════════════════════════════════════════════════════════════
