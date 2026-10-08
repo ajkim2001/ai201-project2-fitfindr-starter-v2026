@@ -394,6 +394,42 @@ either adding per-try query lists to `scenarios.py`'s shape or changing how
 `run_eval.py` iterates tries, and I didn't want to touch `run_eval.py` itself
 without checking that in first.
 
+---
+
+## Stretch: A Second Measured Improvement
+
+**Declared change (written before building it):** "What's Still Broken" named
+that `create_fit_card`'s system prompt never got the "plain prose, no
+markdown" instruction that `suggest_outfit`'s did in the first improvement —
+and the after-run caught `create_fit_card` leaking markdown italics
+(`"...adds the *exact* right amount of detail."`) as a direct result. The
+second improvement adds the same one-line instruction to
+`create_fit_card`'s system prompt in `tools.py`, and nothing else. I'll run
+`python run_eval.py --label after2` against the same five scenarios and log
+a third run in the same table format, then report honestly whether it
+helped.
+
+**What I changed:** Added "Plain prose only — no markdown, no asterisks, no
+bullet points." to `create_fit_card`'s system prompt in `tools.py`.
+
+**Which failure it was meant to fix:** The markdown leak in `create_fit_card`
+observed in the after-run (try 2 of the "fit card names price and platform"
+scenario) — the same category of defect the first improvement fixed in
+`suggest_outfit`, now applied to the one tool left out of that fix.
+
+### Run Log — After (second improvement)
+
+| Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1.  |  |  |  |  |  |  |  |
+| 2.  |  |  |  |  |  |  |  |
+| 3.  |  |  |  |  |  |  |  |
+| 4.  |  |  |  |  |  |  |  |
+| 5.  |  |  |  |  |  |  |  |
+
+**Did it help, and how do I know:**
+
+<!-- Filled in after the run. -->
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
