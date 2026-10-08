@@ -264,9 +264,11 @@ Lean into the jacket's structured 80s proportions by pairing it with high-waiste
 
 **Diagnoses**
 
-Nothing missed this run — all five criteria held at their stated target, not just on average.
+Nothing missed this run — all five criteria held at their stated target, not just on average. 
 
-Honestly, though, three of the five (2, 3, 5) are deterministic branch checks with no model call in the path being tested — once the branch logic is correct at all, it passes every time by construction, so running it five times doesn't add information beyond running it once. Of those, **criterion 3 is the one I'd tighten**. Criterion 2's risk is real (a genuine `if` bug would show up), and criterion 5 at least depends on `suggest_outfit`'s empty-wardrobe branch doing something. But criterion 3's scenario ran the *same* item through the *same* query five times — it can't catch an item-specific bug (e.g., a listing missing a field that breaks the handoff) because it never varies the item. A tighter version would run the state check across 5 different matching queries/items instead of one query five times, so the five tries are actually five different pieces of evidence rather than five repeats of the same one.
+One thing to note is that the real output underneath wasn't clean: one of `suggest_outfit`'s outputs (criterion 3, try 1) leaked markdown bold — `"...your fitted **white ribbed tank top**..."`. No criterion checks for markdown, so it didn't cost a PASS, but it's a real defect in the tool's output.
+
+Honestly, three of the five (2, 3, 5) are deterministic branch checks with no model call in the path being tested — once the branch logic is correct at all, it passes every time by construction, so running it five times doesn't add information beyond running it once. Of those, **criterion 3 is the one I'd tighten**. Criterion 2's risk is real (a genuine `if` bug would show up), and criterion 5 at least depends on `suggest_outfit`'s empty-wardrobe branch doing something. But criterion 3's scenario ran the *same* item through the *same* query five times — it can't catch an item-specific bug (e.g., a listing missing a field that breaks the handoff) because it never varies the item. A tighter version would run the state check across 5 different matching queries/items instead of one query five times, so the five tries are actually five different pieces of evidence rather than five repeats of the same one.
 
 ---
 
