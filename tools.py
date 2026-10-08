@@ -237,7 +237,8 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         "You write short social captions for thrifted clothing finds. Write "
         "like a real post, not a product description — two to four sentences, "
         "specific about the vibe. Mention the item, its price, and its "
-        "platform exactly once each."
+        "platform exactly once each. Plain prose only — no markdown, no "
+        "asterisks, no bullet points."
     )
 
     prompt = (

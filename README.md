@@ -421,15 +421,33 @@ scenario) — the same category of defect the first improvement fixed in
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. selected_item reaches suggest_outfit unchanged | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card names price and platform | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Empty wardrobe gets non-empty advice | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Did it help, and how do I know:**
+Full output: `results/run_2026-10-07_1709_after2.md`.
 
-<!-- Filled in after the run. -->
+**Did it help, and how do I know:** Yes, and this time cleanly — I checked
+the entire after2 run for markdown and found zero instances across
+all 25 `suggest_outfit` and `create_fit_card` calls combined, versus 1 in the
+original before-run and 1 more in the first after-run. The fix generalized to
+the tool it was scoped to.
+
+One side effect worth noting, not a regression: in the criterion-4 scenario
+(leather belt, $12.00), 3 of the 5 fit cards this run wrote the price in
+words — "twelve dollars," "twelve bucks," "12 dollars" — instead of "$12.00."
+That still satisfies the criterion as written (it mentions the price; the
+criterion never required digit formatting), so all five tries still PASS. But
+it's a real behavior change I didn't predict: telling the model to avoid
+"asterisks" and "bullet points" apparently nudged some outputs away from
+`$12.00`-style notation too, maybe reading it as adjacent to the discouraged
+formatting. If a future criterion ever required a specific price format
+(e.g., "the fit card includes the `$` symbol"), this change would newly put
+that at risk — exactly the kind of thing that'd only show up by actually
+running it and reading the output, not by reasoning about the prompt in the
+abstract.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
